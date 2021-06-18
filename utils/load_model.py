@@ -74,10 +74,10 @@ class ModelCL(nn.Module):
 
         self.num_classes = num_classes
 
-        self.sizes_block_1 = [3, 16, 32, 64, 32]
-        self.sizes_block_2 = [32, 64, 128, 64]
-        self.sizes_block_3 = [64, 128, 128, 256]
-        self.sizes_block_4 = [256]
+        self.sizes_block_1 = [3, 16, 16, 16, 16]
+        self.sizes_block_2 = [16, 32, 32, 32, 32]
+        self.sizes_block_3 = [32, 64, 64, 64, 64]
+        self.sizes_block_4 = [64]
 
         ####### block 1 #######
         self.block_1 = nn.Sequential(
@@ -111,6 +111,14 @@ class ModelCL(nn.Module):
             ]
         )  # 10
 
+        self.dsc = self.depth_conv(
+            c_in=self.sizes_block_4[-1],
+            c_out=self.sizes_block_4[-1],
+            kernel_size=3,
+            stride=1,
+            padding=0,
+        )
+
         self.final_conv = nn.Conv2d(
             in_channels=self.sizes_block_4[-1],
             out_channels=self.num_classes,
@@ -127,6 +135,8 @@ class ModelCL(nn.Module):
         x = self.block_3(x)
         x = self.block_4(x)
 
+        x = self.dsc(x)
+
         x = self.gap(x)
 
         x = self.final_conv(x)
@@ -135,6 +145,16 @@ class ModelCL(nn.Module):
         return x
 
     def conv_block(self, c_in, c_out, **kwargs):
+        seq_block = nn.Sequential(
+            nn.Conv2d(in_channels=c_in, out_channels=c_out, bias=False, **kwargs),
+            nn.BatchNorm2d(num_features=c_out),
+            nn.ReLU(),
+            nn.Dropout2d(p=0.0125),
+        )
+
+        return seq_block
+
+    def depth_conv(self, c_in, c_out, **kwargs):
         seq_block = nn.Sequential(
             nn.Conv2d(
                 in_channels=c_in, out_channels=c_in, groups=c_in, bias=False, **kwargs
