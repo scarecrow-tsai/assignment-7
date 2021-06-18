@@ -52,9 +52,6 @@ def train_loop(
             train_epoch_loss += train_loss.item()
             train_epoch_acc += train_acc.item()
 
-            if scheduler.__class__.__name__ == "CyclicLR":
-                scheduler.step()
-
         # VALIDATION
         val_epoch_loss = 0
         val_epoch_acc = 0
@@ -75,8 +72,9 @@ def train_loop(
                 val_epoch_loss += val_loss.item()
                 val_epoch_acc += val_acc.item()
 
-        if scheduler.__class__.__name__ == "ReduceLROnPlateau":
-            scheduler.step(val_epoch_loss)
+        # if scheduler.__class__.__name__ == "ReduceLROnPlateau":
+        #     scheduler.step(val_epoch_loss)
+        scheduler.step()
 
         avg_train_epoch_loss = train_epoch_loss / len(train_loader)
         avg_val_epoch_loss = val_epoch_loss / len(val_loader)
